@@ -28,7 +28,7 @@ export default async function JobDetailPage({
     .from("applications")
     .select(`
       *,
-      student:student_id(full_name, email)
+      profiles:student_id(full_name, email)
     `)
     .eq("job_id", id)
     .order("applied_at", { ascending: false })

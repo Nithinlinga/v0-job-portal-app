@@ -12,7 +12,7 @@ interface Application {
   student_id: string
   status: string
   applied_at: string
-  student: {
+  profiles: {
     full_name: string
     email: string
   }
@@ -89,8 +89,8 @@ export function JobApplicationsList({
           ) : (
             applications.map((app) => (
               <TableRow key={app.id}>
-                <TableCell className="font-medium">{app.student.full_name}</TableCell>
-                <TableCell>{app.student.email}</TableCell>
+                <TableCell className="font-medium">{app.profiles.full_name}</TableCell>
+                <TableCell>{app.profiles.email}</TableCell>
                 <TableCell>{formatDate(app.applied_at)}</TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(app.status)}>{app.status}</Badge>

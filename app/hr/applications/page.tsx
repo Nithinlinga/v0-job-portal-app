@@ -15,7 +15,7 @@ export default async function ApplicationsPage() {
     .select(`
       *,
       jobs:job_id(title, company_name),
-      student:student_id(full_name, email)
+      profiles:student_id(full_name, email)
     `)
     .in("job_id", (await supabase.from("jobs").select("id").eq("created_by", user.id)).data?.map((j) => j.id) || [])
     .order("applied_at", { ascending: false })

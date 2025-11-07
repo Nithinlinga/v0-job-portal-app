@@ -69,6 +69,6 @@
     "postcss": "^8.5",
     "postcss-nesting": "^13.0.2",
     "tailwindcss": "^4.1.9",
-    "typescript": "^5.9.3"
+    "typescript": "^5"
   }
 }
