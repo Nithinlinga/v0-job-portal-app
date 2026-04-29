@@ -1,27 +1,43 @@
-"use client"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { JobApplicationsList } from "@/components/job-applications-list"
 
-import { createClient } from "@supabase/supabase-js"
-import { useRouter } from "next/router"
+export default async function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-const supabaseUrl = "https://your-supabase-url.supabase.co"
-const supabaseKey = "your-supabase-key"
-const supabase = createClient(supabaseUrl, supabaseKey)
+  if (!user) {
+    redirect("/auth/login")
+  }
 
-const Page = () => {
-  const router = useRouter()
-  const { id } = router.query
+  const { data: job } = await supabase.from("jobs").select("*").eq("id", id).eq("created_by", user.id).single()
 
-  const fetchApplications = async () => {
-    const { data: applications } = await supabase
-      .from("applications")
-      .select(`
-        *,
-        profiles:student_id(full_name, email)
-      `)
-      .eq("job_id", id)
-      .order("applied_at", { ascending: false })
+  if (!job) {
+    redirect("/hr/dashboard")
+  }
 
-    console.log(applications)
+  const { data: applications } = await supabase
+    .from("applications")
+    .select(`
+      *,
+      profiles:student_id(full_name, email)
+    `)
+    .eq("job_id", id)
+    .order("applied_at", { ascending: false })
+
+  const stats = {
+    total: applications?.length || 0,
+    pending: applications?.filter((a) => a.status === "pending").length || 0,
+    shortlisted: applications?.filter((a) => a.status === "shortlisted").length || 0,
+    accepted: applications?.filter((a) => a.status === "accepted").length || 0,
   }
 
   return (

@@ -1,4 +1,6 @@
--- Auto-create profile when user signs up
+-- Updated trigger to properly handle full_name extraction
+-- Run this in Supabase SQL Editor to replace the old trigger
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -11,19 +13,13 @@ BEGIN
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data ->> 'role', 'student'),
-    -- Extract full_name from auth metadata
     COALESCE(NEW.raw_user_meta_data ->> 'full_name', '')
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = COALESCE(NEW.raw_user_meta_data ->> 'full_name', ''),
+    role = COALESCE(NEW.raw_user_meta_data ->> 'role', 'student'),
+    updated_at = NOW();
+  
   RETURN NEW;
 END;
 $$;
-
--- Drop existing trigger if it exists
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
--- Create trigger
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();

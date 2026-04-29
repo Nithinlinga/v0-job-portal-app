@@ -12,7 +12,7 @@ interface Application {
   status: string
   applied_at: string
   jobs: { title: string; company_name: string }
-  student: { full_name: string; email: string }
+  profiles: { full_name: string; email: string }
 }
 
 export function ApplicationsList({ applications }: { applications: Application[] }) {
@@ -59,8 +59,8 @@ export function ApplicationsList({ applications }: { applications: Application[]
               <TableRow key={app.id}>
                 <TableCell>
                   <div>
-                    <p className="font-medium">{app.student.full_name}</p>
-                    <p className="text-sm text-slate-500">{app.student.email}</p>
+                    <p className="font-medium">{app.profiles.full_name}</p>
+                    <p className="text-sm text-slate-500">{app.profiles.email}</p>
                   </div>
                 </TableCell>
                 <TableCell>{app.jobs.title}</TableCell>

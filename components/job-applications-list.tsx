@@ -15,7 +15,7 @@ interface Application {
   profiles: {
     full_name: string
     email: string
-  }
+  } | null
 }
 
 export function JobApplicationsList({
@@ -89,8 +89,8 @@ export function JobApplicationsList({
           ) : (
             applications.map((app) => (
               <TableRow key={app.id}>
-                <TableCell className="font-medium">{app.profiles.full_name}</TableCell>
-                <TableCell>{app.profiles.email}</TableCell>
+                <TableCell className="font-medium">{app.profiles?.full_name || "N/A"}</TableCell>
+                <TableCell>{app.profiles?.email || "N/A"}</TableCell>
                 <TableCell>{formatDate(app.applied_at)}</TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(app.status)}>{app.status}</Badge>
