@@ -42,23 +42,58 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const redirectTo = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+        (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined)
+
+      const signUpOptions: Record<string, unknown> = {
+        data: {
+          role,
+          full_name: fullName,
+        },
+      }
+
+      if (redirectTo) {
+        signUpOptions.emailRedirectTo = redirectTo
+      }
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            role: role,
-          },
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
-        },
+        options: signUpOptions,
       })
 
       if (signUpError) throw signUpError
 
+      // After successful signup, ensure profile is created (backup to database trigger)
+      if (signUpData?.user?.id) {
+        try {
+          const profileResponse = await fetch("/api/auth/create-profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_id: signUpData.user.id,
+              email,
+              role,
+              full_name: fullName,
+            }),
+          })
+
+          if (!profileResponse.ok) {
+            const error = await profileResponse.json()
+            throw new Error(error.error || "Failed to create profile")
+          }
+        } catch (profileError) {
+          console.error("Profile creation error:", profileError)
+          // Don't fail signup if profile creation fails - trigger might handle it
+          throw new Error("Database error saving new user")
+        }
+      }
+
       router.push("/auth/signup-success")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "An error occurred during signup. Please verify your redirect URL and database trigger configuration.")
     } finally {
       setIsLoading(false)
     }

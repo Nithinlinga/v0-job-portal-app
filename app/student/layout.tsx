@@ -18,8 +18,13 @@ export default async function StudentLayout({
   }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const role = profile?.role?.toString().toLowerCase()
 
-  if (profile?.role !== "student") {
+  if (!role) {
+    redirect("/auth/login")
+  }
+
+  if (role !== "student") {
     redirect("/hr/dashboard")
   }
 

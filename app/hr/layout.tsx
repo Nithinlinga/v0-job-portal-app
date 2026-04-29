@@ -18,8 +18,13 @@ export default async function HRLayout({
   }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const role = profile?.role?.toString().toLowerCase()
 
-  if (profile?.role !== "hr") {
+  if (!role) {
+    redirect("/auth/login")
+  }
+
+  if (role !== "hr") {
     redirect("/student/jobs")
   }
 

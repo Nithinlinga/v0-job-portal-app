@@ -41,11 +41,18 @@ export default function LoginPage() {
 
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
-      if (profile?.role === "hr") {
+      const role = profile?.role?.toString().toLowerCase()
+      if (role === "hr") {
         router.push("/hr/dashboard")
-      } else {
-        router.push("/student/jobs")
+        return
       }
+
+      if (role === "student") {
+        router.push("/student/jobs")
+        return
+      }
+
+      throw new Error("Unable to determine user role. Please contact support.")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

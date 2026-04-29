@@ -23,21 +23,34 @@ export default function StudentJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [jobType, setJobType] = useState<string | null>(null)
   const [location, setLocation] = useState("")
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("status", "open")
-        .order("created_at", { ascending: false })
+      setError(null)
+      setIsLoading(true)
 
-      setJobs(data || [])
-      setIsLoading(false)
+      try {
+        const supabase = createClient()
+        const { data, error: fetchError } = await supabase
+          .from("jobs")
+          .select("*")
+          .eq("status", "open")
+          .order("created_at", { ascending: false })
+
+        if (fetchError) {
+          throw fetchError
+        }
+
+        setJobs(data || [])
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load jobs")
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchJobs()
@@ -106,6 +119,8 @@ export default function StudentJobsPage() {
 
       {isLoading ? (
         <Card className="p-8 text-center text-slate-500">Loading jobs...</Card>
+      ) : error ? (
+        <Card className="p-8 text-center text-red-500">{error}</Card>
       ) : filteredJobs.length === 0 ? (
         <Card className="p-8 text-center text-slate-500">No jobs found matching your criteria</Card>
       ) : (
