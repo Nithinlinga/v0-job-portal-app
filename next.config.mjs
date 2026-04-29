@@ -9,9 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    turbopackUseSystemTlsCerts: true,
-  },
 }
 
 export default nextConfig
