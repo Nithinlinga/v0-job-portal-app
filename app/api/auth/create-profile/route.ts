@@ -23,22 +23,28 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
+
     // Check if profile already exists
-    const { data: existingProfile } = await supabase
+    const { data: existingProfiles, error: selectError } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", user_id)
-      .single()
+      .limit(1)
 
-    if (existingProfile) {
+    if (selectError) {
+      console.error("Error checking existing profile:", selectError)
+      // Don't block creation, continue
+    }
+
+    if (existingProfiles && existingProfiles.length > 0) {
       return NextResponse.json(
-        { message: "Profile already exists", profile: existingProfile },
+        { message: "Profile already exists", profile: existingProfiles[0] },
         { status: 200 }
       )
     }
 
     // Create new profile
-    const { data: newProfile, error: createError } = await supabase
+    const { data: insertedProfiles, error: createError } = await supabase
       .from("profiles")
       .insert({
         id: user_id,
@@ -47,7 +53,6 @@ export async function POST(request: NextRequest) {
         full_name: full_name || email.split("@")[0],
       })
       .select()
-      .single()
 
     if (createError) {
       console.error("Error creating profile:", createError)
@@ -57,8 +62,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!insertedProfiles || insertedProfiles.length === 0) {
+      return NextResponse.json(
+        { error: "Profile creation failed: No profile returned from database." },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
-      { message: "Profile created successfully", profile: newProfile },
+      { message: "Profile created successfully", profile: insertedProfiles[0] },
       { status: 201 }
     )
   } catch (error) {
